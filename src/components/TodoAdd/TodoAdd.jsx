@@ -1,6 +1,6 @@
 import React , {useState} from "react";
 import { View, Text, Button, TouchableOpacity, StyleSheet, TextInput, FlatList} from 'react-native';
-
+import Timer from "../Timer/Timer";
 
 const TodoAdd=()=>{
     const [tasks, setTasks] = useState([]);
@@ -8,10 +8,36 @@ const TodoAdd=()=>{
 
   const addTask = () => {
     if (task.trim() !== "") {
-      setTasks([...tasks, { key: Date.now().toString(), task}]);
+      setTasks([...tasks, { key: Date.now().toString(), task, completed: false, timerRunning: false, 
+        time: 180,
+        alarmActive: false }]);
       setTask("");
     }
   };
+
+
+  const startTimer = (taskKey) => {
+    setTasks(tasks.map(item => 
+      item.key === taskKey 
+        ? { ...item, timerRunning: true }
+        : item
+    ));
+  };
+
+  const stopAlarmAndStartNextTimer = (taskKey) => {
+    setTasks(tasks.map(item =>
+      item.key === taskKey
+        ? { ...item, alarmActive: false, time: 60, timerRunning: true } 
+        : item
+    ));
+  };
+
+  const completeTask = (taskKey) => {
+    setTasks(tasks.map(item =>
+      item.key===taskKey ? {...item, completed: !item.completed} : item
+    ))
+  }
+  
 
   const deleteTask = (taskKey) => {
     setTasks(tasks.filter(item => item.key !== taskKey));
@@ -20,7 +46,7 @@ const TodoAdd=()=>{
     return(
   
         <View style={styles.container}>
-      <Text style={styles.heading}>To-Do List</Text>
+      <Text style={styles.heading}>Lista de tareas</Text>
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -35,9 +61,13 @@ const TodoAdd=()=>{
         renderItem={({ item }) => (
           <View style={styles.taskContainer}>
             <Text style={styles.taskText}>{item.task}</Text>
+            <TouchableOpacity onPress={() => completeTask(item.key)}>
+        <Text style={styles.completeText}>{item.completed ? "Undo" : "Complete"}</Text>
+      </TouchableOpacity>
             <TouchableOpacity onPress={() => deleteTask(item.key)}>
               <Text style={styles.deleteText}>Delete</Text>
             </TouchableOpacity>
+            <Timer task={item} startTimer={startTimer} stopAlarmAndStartNextTimer={stopAlarmAndStartNextTimer} />
           </View>
         )}
       />
@@ -85,6 +115,11 @@ const styles = StyleSheet.create({
     deleteText: {
       color: "red",
       fontWeight: "bold",
+    },
+    completeText: {
+      color: "green",
+      fontWeight: "bold",
+      marginRight: 10,
     },
   });
   
