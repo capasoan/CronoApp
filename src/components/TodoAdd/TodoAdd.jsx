@@ -34,7 +34,7 @@ const TodoAdd=()=>{
 
   const completeTask = (taskKey) => {
     setTasks(tasks.map(item =>
-      item.key===taskKey ? {...item, completed: !item.completed} : item
+      item.key===taskKey ? {...item, completed: !item.completed,timerRunning: false, time: 0 } : item
     ))
   }
   
