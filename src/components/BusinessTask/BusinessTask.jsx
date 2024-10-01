@@ -2,15 +2,19 @@ import React , {useState} from "react";
 import { View, Text, Button, TouchableOpacity, StyleSheet, TextInput, FlatList} from 'react-native';
 import Timer from "../Timer/Timer";
 
-const TodoAdd=()=>{
+const PersonalTask=()=>{
     const [tasks, setTasks] = useState([]);
   const [task, setTask] = useState("");
 
   const addTask = () => {
     if (task.trim() !== "") {
-      setTasks([...tasks, { key: Date.now().toString(), task, completed: false, timerRunning: false, 
-        time: 180,
-        alarmActive: false }]);
+      setTasks([...tasks, { key: Date.now().toString(), task, 
+        completed: false, 
+        timerRunning: false, 
+        time: 5,
+        alarmActive: false,
+        cycleCount: 0, }]);
+        
       setTask("");
     }
   };
@@ -27,11 +31,34 @@ const TodoAdd=()=>{
   const stopAlarmAndStartNextTimer = (taskKey) => {
     setTasks(tasks.map(item =>
       item.key === taskKey
-        ? { ...item, alarmActive: false, time: 60, timerRunning: true } 
+        ? { ...item, alarmActive: false, timerRunning: true } 
         : item
     ));
   };
+  
 
+  const resetToInitialTimer = (taskKey) => {
+    console.log("resetToInitialTimer invoked for taskKey:", taskKey); 
+    setTasks(
+      tasks.map((item) => {
+        if (item.key === taskKey) {
+          let newTime = item.time === 5 ? 3 : 5; 
+          let newCycleCount = item.cycleCount + 1; 
+  
+          return {
+            ...item,
+            time: newTime,
+            timerRunning: false, 
+            cycleCount: newCycleCount,
+            alarmActive: false, 
+          };
+        }
+        return item;
+      })
+    );
+  };
+  
+  
   const completeTask = (taskKey) => {
     setTasks(tasks.map(item =>
       item.key===taskKey ? {...item, completed: !item.completed,timerRunning: false, time: 0 } : item
@@ -45,8 +72,8 @@ const TodoAdd=()=>{
 
     return(
   
-        <View style={styles.container}>
-      <Text style={styles.heading}>Lista de tareas</Text>
+      <View style={styles.container}>
+      <Text style={styles.heading}>Treas de hoy</Text>
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -67,7 +94,9 @@ const TodoAdd=()=>{
             <TouchableOpacity onPress={() => deleteTask(item.key)}>
               <Text style={styles.deleteText}>Delete</Text>
             </TouchableOpacity>
-            <Timer task={item} startTimer={startTimer} stopAlarmAndStartNextTimer={stopAlarmAndStartNextTimer} />
+            <Timer task={item} startTimer={startTimer} 
+            stopAlarmAndStartNextTimer={stopAlarmAndStartNextTimer}
+            resetToInitialTimer={resetToInitialTimer} />
           </View>
         )}
       />
@@ -76,7 +105,7 @@ const TodoAdd=()=>{
     )
 }
 
-export default TodoAdd;
+export default PersonalTask;
 
 
 const styles = StyleSheet.create({

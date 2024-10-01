@@ -3,6 +3,7 @@ import { View, Text, Button,} from 'react-native';
 
 
 
+
 export default function Home({navigation}) {
   return (
     <View>  
@@ -17,8 +18,12 @@ export default function Home({navigation}) {
         minutos, seguidos de un breve descanso de 5 minutos.
       </Text>
       <Button
-        title="Ir a la lista de tareas"
-        onPress={() => navigation.navigate('TodoAdd')}
+        title="Ir a la lista de tareas personales"
+        onPress={() => navigation.navigate('PersonalTask')}
+      />
+        <Button
+        title="Ir a la lista de tareas de trabajo"
+        onPress={() => navigation.navigate('BusinessTask')}
       />
     </View>
   );

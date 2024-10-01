@@ -3,7 +3,8 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Home from "../../src/views/Home/Home";
-import TodoAdd from "@/src/components/TodoAdd/TodoAdd";
+import PersonalTask from "@/src/components/PersonalTask/PersonalTask";
+import BusinessTask from "@/src/components/BusinessTask/BusinessTask";
 
 const Stack = createNativeStackNavigator();
 
@@ -13,9 +14,14 @@ export default function HomeScreen() {
       <Stack.Navigator>
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen
-          name="TodoAdd"
-          component={TodoAdd}
-          options={{ title: "Lista de tareas" }}
+          name="PersonalTask"
+          component={PersonalTask}
+          options={{ title: "Lista de tareas personales" }}
+        />
+        <Stack.Screen
+          name="BusinessTask"
+          component={BusinessTask}
+          options={{ title: "Lista de tareas de trabajo" }}
         />
       </Stack.Navigator>
     </SafeAreaView>
