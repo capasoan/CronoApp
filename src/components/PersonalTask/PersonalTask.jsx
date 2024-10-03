@@ -1,37 +1,135 @@
-import React , {useState} from "react";
+import React , {useState, useEffect} from "react";
 import { View, Text, Button, TouchableOpacity, StyleSheet, TextInput, FlatList} from 'react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Timer from "../Timer/Timer";
+import CompletedTask from "../CompletedTasks/CompletedTasks";
+
 
 const PersonalTask=()=>{
     const [tasks, setTasks] = useState([]);
   const [task, setTask] = useState("");
- 
+  const [completedTasks, setCompletedTasks] = useState([]);
 
+  useEffect(() => {
+    return () => {
+      saveTasksToStorage(tasks);
+      saveCompletedTasksToStorage(completedTasks);
+    };
+  }, [tasks, completedTasks]);
+  
+  
+  useEffect(() => {
+    const loadTasks = async () => {
+      const savedTasks = await loadTasksFromStorage();
+      const savedCompletedTasks = await loadCompletedTasksFromStorage();
+      if (savedTasks.length > 0) {
+        setTasks(savedTasks);
+      }
+      if (savedCompletedTasks.length > 0) {
+        setCompletedTasks(savedCompletedTasks);
+      }
+    };
+    loadTasks();
+  }, []); 
+  
+  
+  useEffect(() => {
+    if (tasks.length > 0) {
+      saveTasksToStorage(tasks);
+    }
+    }, [tasks]); 
+    
+  useEffect(() => {
+    if (completedTasks.length > 0) {
+      saveCompletedTasksToStorage(completedTasks);
+    }
+    }, [completedTasks]);
+    
   const addTask = () => {
     if (task.trim() !== "") {
-      setTasks([...tasks, { key: Date.now().toString(), task, 
-        completed: false, 
-        timerRunning: false, 
+      const newTask = {
+        key: Date.now().toString(),
+        task,
+        completed: false,
+        timerRunning: false,
         time: 5,
         alarmActive: false,
-        cycleCount: 0, }]);
-        
+        cycleCount: 0,
+      };
+      setTasks(prevTasks => {
+        const updatedTasks = [...prevTasks, newTask];
+        saveTasksToStorage(updatedTasks); 
+        return updatedTasks;
+      });
       setTask("");
     }
   };
-
-
-  const startTimer = (taskKey) => {
-    setTasks(tasks.map(item => 
-      item.key === taskKey 
-        ? { ...item, timerRunning: true ,alarmActive: false }
-        : item
-    ));
-
+  const completeTask = (taskKey) => {
+    setTasks(prevTasks => {
+      const updatedTasks = prevTasks.map(item =>
+        item.key === taskKey ? { ...item, completed: true } : item
+      ).filter(item => !item.completed);
+  
+      const completedTask = prevTasks.find(item => item.key === taskKey);
+      if (completedTask) {
+        const newCompletedTasks = [...completedTasks, completedTask];
+        setCompletedTasks(newCompletedTasks);
+        saveCompletedTasksToStorage(newCompletedTasks); 
+      }
+  
+      saveTasksToStorage(updatedTasks);
+      return updatedTasks;
+    });
   };
- 
+    
+    const deleteTask = (taskKey) => {
+      const updatedTasks = tasks.filter(item => item.key !== taskKey);
+      setTasks(updatedTasks);
+      saveTasksToStorage(updatedTasks);
+    };
+  
+
+
+  const loadTasksFromStorage = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem('tasks'); 
+      return jsonValue != null ? JSON.parse(jsonValue) : []; 
+    } catch (e) {
+      console.error('Error al cargar las tareas desde AsyncStorage:', e);
+      return [];
+    }
+  };
+
+  const saveTasksToStorage = async (tasksToSave) => {
+    try {
+      await AsyncStorage.setItem('tasks', JSON.stringify(tasksToSave)); 
+    } catch (e) {
+      console.error('Error al guardar las tareas en AsyncStorage:', e);
+    }
+  };
+
+  const loadCompletedTasksFromStorage = async () => {
+    try {
+      const savedCompletedTasks = await AsyncStorage.getItem('completedTasks');
+      return savedCompletedTasks != null ? JSON.parse(savedCompletedTasks) : [];
+    } catch (e) {
+      console.error('Error al cargar las tareas completadas desde AsyncStorage:', e);
+      return [];
+    }
+  };
+  
+const saveCompletedTasksToStorage = async (completedTasksToSave) => {
+    try {
+        // console.log('Guardando tareas completadas:', completedTasksToSave);
+        await AsyncStorage.setItem('completedTasks', JSON.stringify(completedTasksToSave));
+    } catch (e) {
+        console.error('Error al guardar las tareas completadas en AsyncStorage:', e);
+    }
+};
+
+
   const resetToInitialTimer = (taskKey) => {
-    console.log("resetToInitialTimer invoked for taskKey:", taskKey); 
+    // console.log("resetToInitialTimer invoked for taskKey:", taskKey); 
     setTasks(
       tasks.map((item) => {
         if (item.key === taskKey) {
@@ -51,22 +149,10 @@ const PersonalTask=()=>{
     );
   };
   
-  
-  const completeTask = (taskKey) => {
-    setTasks(tasks.map(item =>
-      item.key===taskKey ? {...item, completed: !item.completed,timerRunning: false, time: 0 } : item
-    ))
-  }
-  
-
-  const deleteTask = (taskKey) => {
-    setTasks(tasks.filter(item => item.key !== taskKey));
-  };
-
     return(
   
       <View style={styles.container}>
-      <Text style={styles.heading}>Treas de hoy</Text>
+      <Text style={styles.heading}>Tareas de hoy</Text>
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -87,15 +173,15 @@ const PersonalTask=()=>{
             <TouchableOpacity onPress={() => deleteTask(item.key)}>
               <Text style={styles.deleteText}>Delete</Text>
             </TouchableOpacity>
-            <Timer task={item} startTimer={startTimer} 
-             
+            <Timer task={item} 
             resetToInitialTimer={resetToInitialTimer} />
-           
           </View>
         )}
+        keyExtractor={(item) => item.key}
       />
+      
+    
     </View>
-       
     )
 }
 
@@ -105,6 +191,7 @@ export default PersonalTask;
 const styles = StyleSheet.create({
     container: {
       marginTop: 20,
+      paddingHorizontal: 20,
     },
     heading: {
       fontSize: 24,

@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Button, Alert} from 'react-native';
 import { Audio } from 'expo-av';
 
-const Timer = ({ task, startTimer, resetToInitialTimer }) => { 
+const Timer = ({ task, resetToInitialTimer }) => { 
   const [timeLeft, setTimeLeft] = useState(task?.time || 0);
   const [sound, setSound] = useState()
   const [isActive, setIsActive] = useState(false);
+  const [initialStart, setInitialStart] = useState(false);
 
   const playSound = async () => { 
     const { sound } = await Audio.Sound.createAsync(
@@ -16,6 +17,9 @@ const Timer = ({ task, startTimer, resetToInitialTimer }) => {
   };
   
   const handleStartStop=()=>{
+    if (!initialStart) {
+      setInitialStart(true); 
+    }
     setIsActive(!isActive);
    }
  
@@ -64,8 +68,8 @@ const Timer = ({ task, startTimer, resetToInitialTimer }) => {
   return (
     <View style={{ padding: 20, alignItems: 'center' }}>
       <Text style={{ fontSize: 40, marginBottom: 20 }}>{timeLeft}s</Text>
-      <Button title="Iniciar" onPress={() => startTimer(task.key)} disabled={task?.timerRunning} />
-      <Button title={isActive ? "Pausar" : "Reanudar"} onPress={handleStartStop} />
+      <Button title={isActive ? "Pausar" : initialStart ? "Reanudar" : "Iniciar"}
+        onPress={handleStartStop} />
 
 
     </View>

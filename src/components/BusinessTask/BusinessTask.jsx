@@ -1,41 +1,63 @@
-import React , {useState} from "react";
+import React , {useState, useEffect} from "react";
 import { View, Text, Button, TouchableOpacity, StyleSheet, TextInput, FlatList} from 'react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import Timer from "../Timer/Timer";
 
-const PersonalTask=()=>{
-    const [tasks, setTasks] = useState([]);
+const BusinesTask=()=>{
+  const [tasks, setTasks] = useState([]);
   const [task, setTask] = useState("");
+  const [completedTasks, setCompletedTasks] = useState([]);
 
   const addTask = () => {
     if (task.trim() !== "") {
-      setTasks([...tasks, { key: Date.now().toString(), task, 
-        completed: false, 
-        timerRunning: false, 
+      const newTask = {
+        key: Date.now().toString(),
+        task,
+        completed: false,
+        timerRunning: false,
         time: 5,
         alarmActive: false,
-        cycleCount: 0, }]);
+        cycleCount: 0,
+      };
+      setTasks([...tasks, newTask]);
+      saveTasksToStorage([...tasks, newTask]);
         
       setTask("");
     }
   };
-
-
-  const startTimer = (taskKey) => {
-    setTasks(tasks.map(item => 
-      item.key === taskKey 
-        ? { ...item, timerRunning: true }
-        : item
-    ));
-  };
-
-  const stopAlarmAndStartNextTimer = (taskKey) => {
-    setTasks(tasks.map(item =>
-      item.key === taskKey
-        ? { ...item, alarmActive: false, timerRunning: true } 
-        : item
-    ));
-  };
   
+
+
+  const loadTasksFromStorage = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem('businessTasks'); 
+      return jsonValue != null ? JSON.parse(jsonValue) : []; 
+    } catch (e) {
+      console.error('Error al cargar las tareas desde AsyncStorage:', e);
+      return [];
+    }
+  };
+
+  const saveTasksToStorage = async (tasksToSave) => {
+    try {
+      await AsyncStorage.setItem('businessTasks', JSON.stringify(tasksToSave)); 
+    } catch (e) {
+      console.error('Error al guardar las tareas en AsyncStorage:', e);
+    }
+  };
+
+useEffect(() => {
+  const loadTasks = async () => {
+    const savedTasks = await loadTasksFromStorage();
+    const savedCompletedTasks = await AsyncStorage.getItem('completedTasks');
+    setTasks(savedTasks);
+    setCompletedTasks(savedCompletedTasks != null ? JSON.parse(savedCompletedTasks) : []);
+    
+  };
+  loadTasks();
+}, []); 
+
 
   const resetToInitialTimer = (taskKey) => {
     console.log("resetToInitialTimer invoked for taskKey:", taskKey); 
@@ -60,14 +82,31 @@ const PersonalTask=()=>{
   
   
   const completeTask = (taskKey) => {
-    setTasks(tasks.map(item =>
-      item.key===taskKey ? {...item, completed: !item.completed,timerRunning: false, time: 0 } : item
-    ))
+    setTasks(prevTasks => {
+      const updatedTasks = prevTasks.map(item => 
+          item.key === taskKey ? { ...item, completed: true } : item
+      ).filter(item => !item.completed);
+    const completedTask = prevTasks.find(item => item.key === taskKey);
+    if (completedTask) {
+        setCompletedTasks(prevCompleted => [...prevCompleted, completedTask]);
+        saveCompletedTasksToStorage([...completedTasks, completedTask]);
+    }
+    saveTasksToStorage(updatedTasks);
+    return updatedTasks;
+  })
   }
   
-
+  const saveCompletedTasksToStorage = async (completedTasksToSave) => {
+    try {
+        await AsyncStorage.setItem('completedTasks', JSON.stringify(completedTasksToSave));
+    } catch (e) {
+        console.error('Error al guardar las tareas completadas en AsyncStorage:', e);
+    }
+};
   const deleteTask = (taskKey) => {
-    setTasks(tasks.filter(item => item.key !== taskKey));
+    const updatedTasks = tasks.filter(item => item.key !== taskKey);
+    setTasks(updatedTasks);
+    saveTasksToStorage(updatedTasks);
   };
 
     return(
@@ -94,9 +133,10 @@ const PersonalTask=()=>{
             <TouchableOpacity onPress={() => deleteTask(item.key)}>
               <Text style={styles.deleteText}>Delete</Text>
             </TouchableOpacity>
-            <Timer task={item} startTimer={startTimer} 
-            stopAlarmAndStartNextTimer={stopAlarmAndStartNextTimer}
+            <Timer task={item} 
+             
             resetToInitialTimer={resetToInitialTimer} />
+           
           </View>
         )}
       />
@@ -105,7 +145,7 @@ const PersonalTask=()=>{
     )
 }
 
-export default PersonalTask;
+export default BusinesTask;
 
 
 const styles = StyleSheet.create({
