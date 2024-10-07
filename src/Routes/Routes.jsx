@@ -3,8 +3,9 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Home from "../views/Home/Home";
 import PersonalTask from "../components/PersonalTask/PersonalTask";
 import BusinessTask from "../components/BusinessTask/BusinessTask";
+import Categories from "../components/Categories/Categories";
 import Profile from "../views/Profile/Profile ";
-import CompletedTask from "../components/CompletedTasks/CompletedTasks";
+import Analytic from "../views/Analytic/Analytic";
 
 const Stack = createNativeStackNavigator();
 
@@ -19,29 +20,33 @@ const routeScreenDefaultsOptions = {
 const Routes = () => {
   return (
     <Stack.Navigator>
-    <Stack.Screen name="Home" component={Home} />
-    <Stack.Screen
-      name="PersonalTask"
-      component={PersonalTask}
-      options={routeScreenDefaultsOptions}
-    />
-    <Stack.Screen
-      name="BusinessTask"
-      component={BusinessTask}
-      options={routeScreenDefaultsOptions}
-    />
-    <Stack.Screen
-      name="Profile"
-      component={Profile}
-      options={routeScreenDefaultsOptions}
-    />
- <Stack.Screen 
-  name="CompletedTask" 
-  component={CompletedTask} 
-  options={routeScreenDefaultsOptions} 
-/>
-
-  </Stack.Navigator>
+      <Stack.Screen name="Home" component={Home} />
+      <Stack.Screen
+        name="Personal"
+        component={PersonalTask}
+        options={routeScreenDefaultsOptions}
+      />
+      <Stack.Screen
+        name="Business"
+        component={BusinessTask}
+        options={routeScreenDefaultsOptions}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={Profile}
+        options={routeScreenDefaultsOptions}
+      />
+      <Stack.Screen
+        name="Analytic"
+        component={Analytic}
+        options={routeScreenDefaultsOptions}
+      />
+      <Stack.Screen
+        name="Categories"
+        component={Categories}
+        options={routeScreenDefaultsOptions}
+      />
+    </Stack.Navigator>
   );
 };
 

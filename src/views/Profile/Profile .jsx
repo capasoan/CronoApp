@@ -65,13 +65,13 @@ const Profile = () => {
       <View style={styles.form}>
         {isProfileCreated && ( 
           <>
-            <Text style={styles.label}>Nombre: {name}</Text>
+            <Text style={styles.label}>Name: {name}</Text>
             <Text style={styles.label}>Email: {email}</Text>
           </>
         )}
         <TextInput
           style={styles.input}
-          placeholder="Nombre"
+          placeholder="Name"
           value={name}
           onChangeText={setName}
           editable={isEditing || !isProfileCreated} 
@@ -84,7 +84,7 @@ const Profile = () => {
           editable={isEditing || !isProfileCreated} 
         />
       </View>
-      <Button title={isProfileCreated ? (isEditing ? "Guardar" : "Editar") : "Crear"} onPress={isEditing ? handleSave : handleEdit} />
+      <Button title={isProfileCreated ? (isEditing ? "Save" : "Edit") : "Create"} onPress={isEditing ? handleSave : handleEdit} />
     </View>
   );
 };

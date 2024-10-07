@@ -8,6 +8,8 @@ const BusinesTask=()=>{
   const [tasks, setTasks] = useState([]);
   const [task, setTask] = useState("");
   const [completedTasks, setCompletedTasks] = useState([]);
+  const [deleteTasks, setDeleteTasks] = useState([]);
+  const [showDeleted, setShowDeleted] = useState(false)
 
   const addTask = () => {
     if (task.trim() !== "") {
@@ -16,7 +18,7 @@ const BusinesTask=()=>{
         task,
         completed: false,
         timerRunning: false,
-        time: 5,
+        time: 1500,
         alarmActive: false,
         cycleCount: 0,
       };
@@ -26,8 +28,26 @@ const BusinesTask=()=>{
       setTask("");
     }
   };
-  
 
+  
+  const loadDeletedTasksFromStorage = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem('deletedTasks');
+      return jsonValue != null ? JSON.parse(jsonValue) : [];
+    } catch (e) {
+      console.error('Error al cargar las tareas eliminadas desde AsyncStorage:', e);
+      return [];
+    }
+  };
+
+  
+  const saveDeletedTasksToStorage = async (deletedTasksToSave) => {
+    try {
+      await AsyncStorage.setItem('deletedTasks', JSON.stringify(deletedTasksToSave));
+    } catch (e) {
+      console.error('Error al guardar las tareas eliminadas en AsyncStorage:', e);
+    }
+  };
 
   const loadTasksFromStorage = async () => {
     try {
@@ -47,15 +67,17 @@ const BusinesTask=()=>{
     }
   };
 
-useEffect(() => {
+
   const loadTasks = async () => {
     const savedTasks = await loadTasksFromStorage();
     const savedCompletedTasks = await AsyncStorage.getItem('completedTasks');
+    const savedDeletedTasks = await loadDeletedTasksFromStorage();
     setTasks(savedTasks);
     setCompletedTasks(savedCompletedTasks != null ? JSON.parse(savedCompletedTasks) : []);
-    
+    setDeleteTasks(savedDeletedTasks);
   };
-  loadTasks();
+  useEffect(() => {
+    loadTasks();
 }, []); 
 
 
@@ -64,7 +86,7 @@ useEffect(() => {
     setTasks(
       tasks.map((item) => {
         if (item.key === taskKey) {
-          let newTime = item.time === 5 ? 3 : 5; 
+          let newTime = item.time === 1500 ? 300 : 1500; 
           let newCycleCount = item.cycleCount + 1; 
   
           return {
@@ -104,7 +126,12 @@ useEffect(() => {
     }
 };
   const deleteTask = (taskKey) => {
+    const taskToDelete = tasks.find(item => item.key === taskKey);
     const updatedTasks = tasks.filter(item => item.key !== taskKey);
+    if (taskToDelete) {
+      setDeleteTasks(prevDeleted => [...prevDeleted, taskToDelete]);
+      saveDeletedTasksToStorage([...deleteTasks, taskToDelete]);
+    }
     setTasks(updatedTasks);
     saveTasksToStorage(updatedTasks);
   };
@@ -112,7 +139,7 @@ useEffect(() => {
     return(
   
       <View style={styles.container}>
-      <Text style={styles.heading}>Treas de hoy</Text>
+      <Text style={styles.heading}>Today's Tasks</Text>
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -140,6 +167,23 @@ useEffect(() => {
           </View>
         )}
       />
+          {/* <Button 
+        title={showDeleted ? "Hide deleted tasks" : "VView deleted tasks"}
+        onPress={() => setShowDeleted(!showDeleted)}
+      /> */}
+      {/* {showDeleted && (
+        <View>
+          <Text style={styles.heading}>Tasks deleted</Text>
+          <FlatList
+            data={deleteTasks}
+            renderItem={({ item }) => (
+              <View style={styles.taskContainer}>
+                <Text style={styles.taskText}>{item.task}</Text>
+              </View>
+            )}
+          />
+        </View>
+      )} */}
     </View>
        
     )

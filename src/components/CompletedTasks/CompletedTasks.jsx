@@ -4,6 +4,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CompletedTask = () => {
   const [completedTasks, setCompletedTasks] = useState([]);
+  const numeroTareasCompletadas = completedTasks.length;
+
+ // console.log("Numero de tareas", numeroTareasCompletadas)
 
   const loadCompletedTasksFromStorage = async () => {
     try {
@@ -17,12 +20,13 @@ const CompletedTask = () => {
   };
 
   useEffect(() => {
-    loadCompletedTasksFromStorage(); // Cargar las tareas cuando el componente se monta
+    loadCompletedTasksFromStorage(); 
   }, []);
   console.log("completedTasks",completedTasks)
   return (
     <View>
       <Text style={styles.heading}>Tareas Completadas</Text>
+      <Text>Numero de tareas completadas: {numeroTareasCompletadas}</Text>
       <FlatList
         data={completedTasks}
         renderItem={({ item }) => (

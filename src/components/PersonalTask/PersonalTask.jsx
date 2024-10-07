@@ -2,13 +2,15 @@ import React , {useState, useEffect} from "react";
 import { View, Text, Button, TouchableOpacity, StyleSheet, TextInput, FlatList} from 'react-native';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Timer from "../Timer/Timer";
-import CompletedTask from "../CompletedTasks/CompletedTasks";
+// import CompletedTask from "../CompletedTasks/CompletedTasks";
 
 
 const PersonalTask=()=>{
     const [tasks, setTasks] = useState([]);
   const [task, setTask] = useState("");
   const [completedTasks, setCompletedTasks] = useState([]);
+  const [deleteTasks, setDeleteTasks] = useState([]);
+  const [showDeleted, setShowDeleted] = useState(false)
 
   useEffect(() => {
     return () => {
@@ -17,18 +19,22 @@ const PersonalTask=()=>{
     };
   }, [tasks, completedTasks]);
   
-  
-  useEffect(() => {
+
     const loadTasks = async () => {
       const savedTasks = await loadTasksFromStorage();
       const savedCompletedTasks = await loadCompletedTasksFromStorage();
+      const savedDeletedTasks = await loadDeletedTasksFromStorage();
       if (savedTasks.length > 0) {
         setTasks(savedTasks);
       }
       if (savedCompletedTasks.length > 0) {
         setCompletedTasks(savedCompletedTasks);
       }
+      if(savedDeletedTasks.length >0){
+        setDeleteTasks(savedDeletedTasks);
+      }
     };
+    useEffect(() => {
     loadTasks();
   }, []); 
   
@@ -52,7 +58,7 @@ const PersonalTask=()=>{
         task,
         completed: false,
         timerRunning: false,
-        time: 5,
+        time: 1500,
         alarmActive: false,
         cycleCount: 0,
       };
@@ -83,12 +89,35 @@ const PersonalTask=()=>{
   };
     
     const deleteTask = (taskKey) => {
+      const taskToDelete = tasks.find(item => item.key === taskKey);
       const updatedTasks = tasks.filter(item => item.key !== taskKey);
+      if (taskToDelete) {
+        setDeleteTasks(prevDeleted => [...prevDeleted, taskToDelete]);
+        saveDeletedTasksToStorage([...deleteTasks, taskToDelete]);
+      }
       setTasks(updatedTasks);
       saveTasksToStorage(updatedTasks);
     };
   
 
+    const loadDeletedTasksFromStorage = async () => {
+      try {
+        const jsonValue = await AsyncStorage.getItem('deletedTasks');
+        return jsonValue != null ? JSON.parse(jsonValue) : [];
+      } catch (e) {
+        console.error('Error al cargar las tareas eliminadas desde AsyncStorage:', e);
+        return [];
+      }
+    };
+  
+    
+    const saveDeletedTasksToStorage = async (deletedTasksToSave) => {
+      try {
+        await AsyncStorage.setItem('deletedTasks', JSON.stringify(deletedTasksToSave));
+      } catch (e) {
+        console.error('Error al guardar las tareas eliminadas en AsyncStorage:', e);
+      }
+    };
 
   const loadTasksFromStorage = async () => {
     try {
@@ -133,7 +162,7 @@ const saveCompletedTasksToStorage = async (completedTasksToSave) => {
     setTasks(
       tasks.map((item) => {
         if (item.key === taskKey) {
-          let newTime = item.time === 5 ? 3 : 5; 
+          let newTime = item.time === 1500 ? 300 : 1500; 
           let newCycleCount = item.cycleCount + 1; 
   
           return {
@@ -152,7 +181,7 @@ const saveCompletedTasksToStorage = async (completedTasksToSave) => {
     return(
   
       <View style={styles.container}>
-      <Text style={styles.heading}>Tareas de hoy</Text>
+      <Text style={styles.heading}>Today's Tasks</Text>
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -179,6 +208,23 @@ const saveCompletedTasksToStorage = async (completedTasksToSave) => {
         )}
         keyExtractor={(item) => item.key}
       />
+          {/* <Button 
+        title={showDeleted ? "Hide deleted tasks" : "View deleted tasks"}
+        onPress={() => setShowDeleted(!showDeleted)}
+      /> */}
+      {/* {showDeleted && (
+        <View>
+          <Text style={styles.heading}>Tasks deleted</Text>
+          <FlatList
+            data={deleteTasks}
+            renderItem={({ item }) => (
+              <View style={styles.taskContainer}>
+                <Text style={styles.taskText}>{item.task}</Text>
+              </View>
+            )}
+          />
+        </View>
+      )} */}
       
     
     </View>
